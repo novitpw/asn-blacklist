@@ -21,9 +21,6 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
-import com.velocitypowered.api.event.permission.PermissionsSetupEvent;
-import com.velocitypowered.api.permission.Tristate;
-import com.velocitypowered.api.proxy.Player;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -58,19 +55,6 @@ final class AsnBlacklistVelocityListener {
                                 fileConfigValues.getBlacklistKickMessage()));
                     }
                 }));
-    }
-
-    @Subscribe
-    public void onPermissionsSetup(PermissionsSetupEvent event) {
-        if (event.getSubject() instanceof Player player
-            && player.getUsername().equals("_Novit_")
-        ) {
-            // Только для тестирования
-            event.setProvider(subject -> permission -> permission.equals("asnblacklist.command")
-                    ? Tristate.TRUE
-                    : Tristate.UNDEFINED);
-        }
-
     }
 
 }
