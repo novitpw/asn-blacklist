@@ -59,4 +59,12 @@ tasks {
             ]
         }
     }
+
+    shadowJar {
+        relocate("net.kyori", "pw.novit.asnblacklist.libs.kyori")
+        relocate("org.yaml", "pw.novit.asnblacklist.libs.yaml")
+        relocate("com.fasterxml", "pw.novit.asnblacklist.libs.fasterxml")
+        relocate("com.maxmind", "pw.novit.asnblacklist.libs.maxmind")
+        relocate("com.github.benmanes", "pw.novit.asnblacklist.libs.benmanes")
+    }
 }
