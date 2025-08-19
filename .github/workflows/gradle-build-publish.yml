@@ -2,8 +2,8 @@ name: Gradle build and publish
 
 on:
   push:
-    branches:
-      - 'master'
+    tags:
+      - '*'
 
 jobs:
   build:
