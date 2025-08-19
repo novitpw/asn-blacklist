@@ -41,7 +41,7 @@ public final class FileConfigValues {
 
     public static @NotNull FileConfigValues create(@NotNull FileConfig fileConfig) {
         val fileConfigValues = new FileConfigValues(fileConfig);
-        fileConfigValues.reload();
+        fileConfigValues.reloadInternal();
 
         return fileConfigValues;
     }
@@ -70,6 +70,11 @@ public final class FileConfigValues {
     Component blacklistKickMessage;
 
     public void reload() {
+        fileConfig.reload();
+        reloadInternal();
+    }
+
+    private void reloadInternal() {
         maxmindKey = fileConfig.getString(MAXMIND_KEY);
         maxmindDatabaseFile = fileConfig.getString(MAXMIND_DATABASE_FILE);
 
@@ -81,7 +86,7 @@ public final class FileConfigValues {
     }
 
     public void setAsnBlacklist(@NotNull Set<Long> asnBlacklist) {
-        this.asnBlacklist = asnBlacklist;
+        this.asnBlacklist = Set.copyOf(asnBlacklist);
 
         fileConfig.set(ASN_BLACKLIST, asnBlacklist);
         fileConfig.save();
