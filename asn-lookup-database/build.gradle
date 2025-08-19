@@ -20,10 +20,17 @@ plugins {
 }
 
 dependencies {
-    compileOnly libs.caffeine
+    compileOnlyApi libs.caffeine
+
+    api platform(libs.jackson.bom)
+    api libs.jackson.databind
+    api libs.jackson.dataformat.yaml
+    api libs.jackson.datatype.jsr310
 
     implementation libs.geoip2, {
-        exclude group: 'com.fasterxml.jackson.datatype'
+        exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'com.fasterxml.jackson.dataformat'
     }
+
     implementation libs.jtar
 }

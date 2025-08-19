@@ -22,7 +22,10 @@ plugins {
 dependencies {
     api project(':asn-lookup-database')
 
-    api libs.wcommons.config
+    api libs.wcommons.config, {
+        exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'com.fasterxml.jackson.dataformat'
+    }
 
     compileOnlyApi libs.adventure.api
     compileOnlyApi libs.adventure.text.minimessage
