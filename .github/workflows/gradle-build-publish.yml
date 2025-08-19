@@ -1,0 +1,47 @@
+name: Gradle build and publish
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      if: github.event_name != 'pull_request'
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build
+      run: ./gradlew build
+
+    - name: Upload JAR to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./output/asn-blacklist-*.jar
