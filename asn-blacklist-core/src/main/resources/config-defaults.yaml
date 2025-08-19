@@ -1,0 +1,6 @@
+maxmind-key: P5g0fVdAQIq8yQau
+maxmind-database-file: GeoLite2-ASN.mmdb
+asn-blacklist:
+  - 123
+  - 321
+kick-message: "[<gradient:#a18cd1:#fbc2eb>AsnBlacklist</gradient>] Ваш ASN заблокирован на данном сервере."

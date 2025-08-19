@@ -1,0 +1,5 @@
+name: AsnBlacklist
+main: 'pw.novit.asnblacklist.bungee.AsnBlacklistBungee'
+author: _Novit_
+version: @revision@
+website: https://novitt.t.me

@@ -1,0 +1,8 @@
+{
+  "id": "asn-blacklist",
+  "name": "AsnBlacklist",
+  "version": "@revision@",
+  "main": "pw.novit.asnblacklist.velocity.AsnBlacklistVelocity",
+  "authors": [ "_Novit_" ],
+  "website": "https://novitt.t.me/"
+}

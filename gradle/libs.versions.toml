@@ -1,0 +1,37 @@
+[versions]
+lombok = "1.18.36"
+annotations = "24.1.0"
+slf4j = "2.0.16"
+shadow = "8.3.9"
+caffeine = "3.2.2"
+geoip2 = "4.3.1"
+jtar = "2.3"
+velocity = "3.4.0-SNAPSHOT"
+bungeecord = "1.21-R0.4-SNAPSHOT"
+junit = "5.11.2"
+mockito = "5.15.2"
+wcommons = "1.6.5"
+adventure = "4.24.0"
+adventure-platform = "4.4.1"
+
+[libraries]
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+shadow = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
+caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
+geoip2 = { group = "com.maxmind.geoip2", name = "geoip2", version.ref = "geoip2" }
+jtar = { group = "org.kamranzafar", name = "jtar", version.ref = "jtar" }
+wcommons-config = { group = "io.github.whilein.wcommons", name = "wcommons-config", version.ref = "wcommons" }
+
+adventure-api = { group = "net.kyori", name = "adventure-api", version.ref = "adventure" }
+adventure-text-minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "adventure" }
+adventure-platform-bungeecord = { group = "net.kyori", name = "adventure-platform-bungeecord", version.ref = "adventure-platform" }
+
+velocity-api = { group = "com.velocitypowered", name = "velocity-api", version.ref = "velocity" }
+bungeecord-api = { group = "net.md-5", name = "bungeecord-api", version.ref = "bungeecord" }
+
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junit-api = { group = "org.junit.jupiter", name = "junit-jupiter-api" }
+junit-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine" }
+mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
