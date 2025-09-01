@@ -52,9 +52,9 @@ jobs:
       with:
         token: ${{ secrets.MODRINTH_TOKEN }}
         file_path: ./output/asn-blacklist-velocity.jar
-        name: Release ${{ github.event.release.tag_name }}
-        version: ${{ github.event.release.tag_name }}
-        changelog: ${{ github.event.release.body }}
+        name: Release ${{ github.ref_name }}
+        version: ${{ github.ref_name }}
+        changelog: Release ${{ github.ref_name }}
         game_versions: 1.7
         release_type: release
         loaders: velocity
@@ -66,9 +66,9 @@ jobs:
       with:
         token: ${{ secrets.MODRINTH_TOKEN }}
         file_path: ./output/asn-blacklist-bungee.jar
-        name: Release ${{ github.event.release.tag_name }}
-        version: ${{ github.event.release.tag_name }}
-        changelog: ${{ github.event.release.body }}
+        name: Release ${{ github.ref_name }}
+        version: ${{ github.ref_name }}
+        changelog: Release ${{ github.ref_name }}
         game_versions: 1.8
         release_type: release
         loaders: bungeecord
