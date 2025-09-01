@@ -46,3 +46,31 @@ jobs:
       with:
         files: ./output/asn-blacklist-*.jar
         generate_release_notes: true
+
+    - name: Upload Velocity build to Modrinth
+      uses: RubixDev/modrinth-upload@v1
+      with:
+        token: ${{ secrets.MODRINTH_TOKEN }}
+        file_path: ./output/asn-blacklist-velocity.jar
+        name: Release ${{ github.event.release.tag_name }}
+        version: ${{ github.event.release.tag_name }}
+        changelog: ${{ github.event.release.body }}
+        game_versions: 1.7
+        release_type: release
+        loaders: velocity
+        featured: true
+        project_id: 1wBP58Vx
+
+    - name: Upload BungeeCord build to Modrinth
+      uses: RubixDev/modrinth-upload@v1
+      with:
+        token: ${{ secrets.MODRINTH_TOKEN }}
+        file_path: ./output/asn-blacklist-bungee.jar
+        name: Release ${{ github.event.release.tag_name }}
+        version: ${{ github.event.release.tag_name }}
+        changelog: ${{ github.event.release.body }}
+        game_versions: 1.8
+        release_type: release
+        loaders: bungeecord
+        featured: true
+        project_id: 1wBP58Vx
