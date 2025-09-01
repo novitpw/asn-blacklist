@@ -23,13 +23,18 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.val;
 import org.slf4j.Logger;
+import pw.novit.asnblacklist.AsnBlacklistService;
 import pw.novit.asnblacklist.SimpleAsnBlacklistService;
+import pw.novit.asnblacklist.config.FileConfigMigrations;
 import pw.novit.asnblacklist.config.FileConfigReader;
 import pw.novit.asnblacklist.config.FileConfigValues;
+import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
 import pw.novit.asnblacklist.registry.FileConfigAsnBlacklistRegistry;
 import pw.novit.asnblacklist.registry.InMemoryAsnBlacklistRegistry;
 import pw.novit.asnblacklist.translation.TranslationRegistrar;
@@ -48,29 +53,63 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author _Novit_ (novitpw)
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@NoArgsConstructor(onConstructor_ = @Inject)
 public final class AsnBlacklistVelocity {
+
+    @NonFinal
+    Path dataDirectory;
+
+    @NonFinal
+    Logger logger;
+
+    @NonFinal
+    FileConfigValues fileConfigValues;
+
+    @NonFinal
+    AsnBlacklistRegistry asnBlacklistRegistry;
+
+    @NonFinal
+    AsnBlacklistService asnBlacklistService;
 
     @Inject
     public void configure(
-            @DataDirectory Path path,
+            @DataDirectory Path dataDirectory,
             Logger logger,
             PluginContainer pluginContainer,
             EventManager eventManager,
             CommandManager commandManager
-    ) throws IOException {
-        TranslationRegistrar.registerGlobal();
+    ) throws Exception {
+        this.dataDirectory = dataDirectory;
+        this.logger = logger;
 
-        val fileConfig = FileConfigReader.read(path.resolve("config.yaml"));
-        val fileConfigValues = FileConfigValues.create(fileConfig);
+        val fileConfig = FileConfigReader.read(dataDirectory.resolve("config.yaml"));
+        FileConfigMigrations.migrate(logger, fileConfig, fileConfig);
+        this.fileConfigValues = FileConfigValues.create(fileConfig);
 
-        val registry = FileConfigAsnBlacklistRegistry.create(fileConfigValues,
+        this.asnBlacklistRegistry = FileConfigAsnBlacklistRegistry.create(fileConfigValues,
                 InMemoryAsnBlacklistRegistry.create(ConcurrentHashMap.newKeySet()));
 
+        reloadTranslations();
+        reloadDatabase();
+
+        eventManager.register(pluginContainer, new AsnBlacklistVelocityListener(logger,
+                asnBlacklistService));
+
+        commandManager.register(commandManager.metaBuilder("asnblacklist")
+                        .aliases("asnbl")
+                        .build(),
+                AsnBlacklistVelocityCommand.create(this, asnBlacklistRegistry));
+    }
+
+    private void reloadTranslations() {
+        TranslationRegistrar.registerGlobal(dataDirectory.resolve("translations"));
+    }
+
+    private void reloadDatabase() throws IOException {
         logger.info("Loading database...");
         val currentMillis = System.currentTimeMillis();
 
-        val asnBlacklistService = SimpleAsnBlacklistService.create(
+        asnBlacklistService = SimpleAsnBlacklistService.create(
                 AsnLookupExecutors.polled(),
                 CaffeineCachedAsnLookupService.create(
                         MaxmindAsnLookupService.create(
@@ -79,25 +118,27 @@ public final class AsnBlacklistVelocity {
                                                 HttpClient.newBuilder()
                                                         .followRedirects(HttpClient.Redirect.NORMAL)
                                                         .build(),
-                                                fileConfigValues.getMaxmindKey()
+                                                fileConfigValues.getMaxmindDatabaseKey()
                                         ),
-                                        path.resolve(fileConfigValues.getMaxmindDatabaseFile())
+                                        dataDirectory.resolve(fileConfigValues.getMaxmindDatabaseFile()),
+                                        fileConfigValues.getMaxmindDatabaseTTL()
                                 )
-                        )
+                        ),
+                        fileConfigValues.getCacheTTL()
                 ),
-                registry
+                asnBlacklistRegistry
         );
 
         logger.info("Database loaded ({}ms).", System.currentTimeMillis() - currentMillis);
+    }
 
-        eventManager.register(pluginContainer, new AsnBlacklistVelocityListener(logger,
-                fileConfigValues,
-                asnBlacklistService));
+    @SneakyThrows
+    public void reloadAll() {
+        fileConfigValues.reload();
+        asnBlacklistRegistry.reload();
 
-        commandManager.register(commandManager.metaBuilder("asnblacklist")
-                        .aliases("asnbl")
-                        .build(),
-                AsnBlacklistVelocityCommand.create(fileConfigValues, registry));
+        reloadTranslations();
+        reloadDatabase();
     }
 
 }

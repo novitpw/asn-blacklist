@@ -29,8 +29,8 @@ import pw.novit.asnlookup.AsnLookupService;
 import pw.novit.asnlookup.model.AsnResponse;
 
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -45,10 +45,17 @@ public final class CaffeineCachedAsnLookupService implements AsnLookupService {
     public static @NotNull AsnLookupService create(
             @NotNull AsnLookupService delegate
     ) {
+        return create(delegate, Duration.ofHours(12));
+    }
+
+    public static @NotNull AsnLookupService create(
+            @NotNull AsnLookupService delegate,
+            @NotNull Duration ttl
+    ) {
         return new CaffeineCachedAsnLookupService(
                 Caffeine.newBuilder()
                         .softValues()
-                        .expireAfterAccess(12, TimeUnit.HOURS)
+                        .expireAfterAccess(ttl)
                         .build(delegate::lookup)
         );
     }

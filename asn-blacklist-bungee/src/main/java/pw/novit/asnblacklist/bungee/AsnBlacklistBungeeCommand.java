@@ -30,9 +30,7 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pw.novit.asnblacklist.config.FileConfigValues;
 import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
-import pw.novit.asnblacklist.translation.TranslationRegistrar;
 import pw.novit.asnblacklist.util.StringUtils;
 
 import java.util.Collections;
@@ -49,18 +47,18 @@ import static net.kyori.adventure.text.Component.translatable;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
     BungeeAudiences bungeeAudiences;
-    FileConfigValues fileConfigValues;
+    AsnBlacklistBungee asnBlacklistBungee;
     AsnBlacklistRegistry asnBlacklistRegistry;
 
     public AsnBlacklistBungeeCommand(
             @NotNull BungeeAudiences bungeeAudiences,
-            @NotNull FileConfigValues fileConfigValues,
+            @NotNull AsnBlacklistBungee asnBlacklistBungee,
             @NotNull AsnBlacklistRegistry asnBlacklistRegistry
     ) {
         super("asnblacklist", "asnblacklist.command", "asnbl");
 
         this.bungeeAudiences = bungeeAudiences;
-        this.fileConfigValues = fileConfigValues;
+        this.asnBlacklistBungee = asnBlacklistBungee;
         this.asnBlacklistRegistry = asnBlacklistRegistry;
     }
 
@@ -124,9 +122,7 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
                                     .toList())));
                 }
                 case "reload" -> {
-                    fileConfigValues.reload();
-                    asnBlacklistRegistry.reload();
-                    TranslationRegistrar.registerGlobal();
+                    asnBlacklistBungee.reloadAll();
 
                     sendMessage(sender, translatable("asnblacklist.command.reload"));
                 }

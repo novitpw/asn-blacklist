@@ -21,7 +21,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.bungeecord.BungeeComponentSerializer;
+import net.kyori.adventure.translation.GlobalTranslator;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -30,11 +32,9 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import org.slf4j.Logger;
 import pw.novit.asnblacklist.AsnBlacklistService;
-import pw.novit.asnblacklist.config.FileConfigValues;
+import pw.novit.asnblacklist.translation.TranslationRegistrar;
 
 import java.net.InetSocketAddress;
-
-import static net.kyori.adventure.text.Component.translatable;
 
 /**
  * @author _Novit_ (novitpw)
@@ -46,7 +46,6 @@ public final class AsnBlacklistBungeeListener implements Listener {
     Plugin plugin;
     Logger logger;
 
-    FileConfigValues fileConfigValues;
     AsnBlacklistService asnBlacklistService;
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -67,7 +66,8 @@ public final class AsnBlacklistBungeeListener implements Listener {
                     } else if (result) {
                         event.setCancelled(true);
                         event.setReason(new TextComponent(BungeeComponentSerializer.get().serialize(
-                                fileConfigValues.getBlacklistKickMessage())));
+                                GlobalTranslator.render(Component.translatable("asnblacklist.message.kick"),
+                                        TranslationRegistrar.DEFAULT_LOCALE))));
                     }
 
                     event.completeIntent(plugin);

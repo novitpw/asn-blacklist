@@ -23,14 +23,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.val;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import pw.novit.asnblacklist.config.mapper.AsnMapper;
 import w.config.FileConfig;
 
+import java.time.Duration;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static net.kyori.adventure.text.minimessage.MiniMessage.miniMessage;
 
 /**
  * @author _Novit_ (novitpw)
@@ -46,16 +45,18 @@ public final class FileConfigValues {
         return fileConfigValues;
     }
 
-    private static final String MAXMIND_KEY = "maxmind-key";
-    private static final String MAXMIND_DATABASE_FILE = "maxmind-database-file";
+    private static final String MAXMIND_KEY = "maxmind-database.api-key";
+    private static final String MAXMIND_DATABASE_FILE = "maxmind-database.file";
+    private static final String MAXMIND_DATABASE_TTL = "maxmind-database.ttl";
+
     private static final String ASN_BLACKLIST = "asn-blacklist";
-    private static final String KICK_MESSAGE = "kick-message";
+    private static final String CACHE_TTL = "cache-ttl";
 
     FileConfig fileConfig;
 
     @Getter
     @NonFinal
-    String maxmindKey;
+    String maxmindDatabaseKey;
 
     @Getter
     @NonFinal
@@ -63,11 +64,15 @@ public final class FileConfigValues {
 
     @Getter
     @NonFinal
+    Duration maxmindDatabaseTTL;
+
+    @Getter
+    @NonFinal
     Set<Long> asnBlacklist;
 
     @Getter
     @NonFinal
-    Component blacklistKickMessage;
+    Duration cacheTTL;
 
     public void reload() {
         fileConfig.reload();
@@ -75,14 +80,14 @@ public final class FileConfigValues {
     }
 
     private void reloadInternal() {
-        maxmindKey = fileConfig.getString(MAXMIND_KEY);
-        maxmindDatabaseFile = fileConfig.getString(MAXMIND_DATABASE_FILE);
+        maxmindDatabaseKey = fileConfig.walk(MAXMIND_KEY).asString();
+        maxmindDatabaseFile = fileConfig.walk(MAXMIND_DATABASE_FILE).asString();
+        maxmindDatabaseTTL = Duration.parse(fileConfig.walk(MAXMIND_DATABASE_TTL).asString());
 
-        asnBlacklist = fileConfig.getLongList(ASN_BLACKLIST).stream()
+        asnBlacklist = fileConfig.getList(ASN_BLACKLIST, AsnMapper.create()).stream()
                 .collect(Collectors.toUnmodifiableSet());
 
-        blacklistKickMessage = miniMessage().deserialize(
-                fileConfig.getString(KICK_MESSAGE));
+        cacheTTL = Duration.parse(fileConfig.getString(CACHE_TTL));
     }
 
     public void setAsnBlacklist(@NotNull Set<Long> asnBlacklist) {

@@ -29,9 +29,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.jetbrains.annotations.NotNull;
-import pw.novit.asnblacklist.config.FileConfigValues;
 import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
-import pw.novit.asnblacklist.translation.TranslationRegistrar;
 
 import java.util.Comparator;
 
@@ -46,7 +44,7 @@ import static net.kyori.adventure.text.Component.translatable;
 final class AsnBlacklistVelocityCommand {
 
     public static @NotNull BrigadierCommand create(
-            @NotNull FileConfigValues fileConfigValues,
+            @NotNull AsnBlacklistVelocity asnBlacklistVelocity,
             @NotNull AsnBlacklistRegistry asnBlacklistRegistry
     ) {
         return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("asnblacklist")
@@ -123,9 +121,7 @@ final class AsnBlacklistVelocityCommand {
                         .build())
                 .then(LiteralArgumentBuilder.<CommandSource>literal("reload")
                         .executes(ctx -> {
-                            fileConfigValues.reload();
-                            asnBlacklistRegistry.reload();
-                            TranslationRegistrar.registerGlobal();
+                            asnBlacklistVelocity.reloadAll();
 
                             ctx.getSource().sendMessage(translatable("asnblacklist.command.reload"));
                             return Command.SINGLE_SUCCESS;

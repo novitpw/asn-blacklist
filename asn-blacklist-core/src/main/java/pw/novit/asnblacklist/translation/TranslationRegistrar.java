@@ -22,9 +22,9 @@ import lombok.val;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.translation.MiniMessageTranslationStore;
 import net.kyori.adventure.translation.GlobalTranslator;
-import net.kyori.adventure.util.UTF8ResourceBundleControl;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -37,23 +37,23 @@ public class TranslationRegistrar {
 
     private static MiniMessageTranslationStore translationStore;
 
-    public static void registerGlobal() {
+    public static void registerGlobal(@NotNull Path path) {
         if (translationStore != null) {
             GlobalTranslator.translator().removeSource(translationStore);
             translationStore = null;
         }
 
-        translationStore = TranslationRegistrar.createStore();
+        translationStore = TranslationRegistrar.createStore(path);
         GlobalTranslator.translator().addSource(translationStore);
     }
 
-    public static @NotNull MiniMessageTranslationStore createStore() {
+    public static @NotNull MiniMessageTranslationStore createStore(@NotNull Path path) {
         val translationStore = MiniMessageTranslationStore.create(Key.key("asnblacklist",
                 "translations"));
         translationStore.defaultLocale(DEFAULT_LOCALE);
 
-        val resourceBundle = ResourceBundle.getBundle("messages", DEFAULT_LOCALE,
-                UTF8ResourceBundleControl.utf8ResourceBundleControl());
+        val resourceBundle = ResourceBundle.getBundle("translations", DEFAULT_LOCALE,
+                UTF8ResourceBundleControl.utf8ResourceBundleControl(path));
 
         translationStore.registerAll(DEFAULT_LOCALE, resourceBundle.keySet(), resourceBundle::getString);
 

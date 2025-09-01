@@ -25,9 +25,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
+import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 import pw.novit.asnblacklist.AsnBlacklistService;
-import pw.novit.asnblacklist.config.FileConfigValues;
 
 /**
  * @author _Novit_ (novitpw)
@@ -36,8 +36,6 @@ import pw.novit.asnblacklist.config.FileConfigValues;
 @RequiredArgsConstructor
 final class AsnBlacklistVelocityListener {
     Logger logger;
-
-    FileConfigValues fileConfigValues;
     AsnBlacklistService asnBlacklistService;
 
     @Subscribe(order = PostOrder.FIRST)
@@ -52,7 +50,7 @@ final class AsnBlacklistVelocityListener {
                         logger.error("An error occurred while trying check asn blacklist", cause);
                     } else if (result) {
                         event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
-                                fileConfigValues.getBlacklistKickMessage()));
+                                Component.translatable("asnblacklist.message.kick")));
                     }
                 }));
     }

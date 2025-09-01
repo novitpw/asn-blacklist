@@ -17,14 +17,21 @@
 
 package pw.novit.asnblacklist.bungee;
 
+import lombok.AccessLevel;
 import lombok.SneakyThrows;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.val;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
 import net.md_5.bungee.api.plugin.Plugin;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pw.novit.asnblacklist.AsnBlacklistService;
 import pw.novit.asnblacklist.SimpleAsnBlacklistService;
+import pw.novit.asnblacklist.config.FileConfigMigrations;
 import pw.novit.asnblacklist.config.FileConfigReader;
 import pw.novit.asnblacklist.config.FileConfigValues;
+import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
 import pw.novit.asnblacklist.registry.FileConfigAsnBlacklistRegistry;
 import pw.novit.asnblacklist.registry.InMemoryAsnBlacklistRegistry;
 import pw.novit.asnblacklist.translation.TranslationRegistrar;
@@ -34,32 +41,67 @@ import pw.novit.asnlookup.database.FileCacheAsnDatabaseProvider;
 import pw.novit.asnlookup.database.maxmind.MaxmindAsnDatabaseProviders;
 import pw.novit.asnlookup.database.maxmind.MaxmindAsnLookupService;
 
+import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author _Novit_ (novitpw)
  */
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public final class AsnBlacklistBungee extends Plugin {
+
+    @NonFinal
+    Path dataDirectory;
+
+    @NonFinal
+    Logger logger;
+
+    @NonFinal
+    FileConfigValues fileConfigValues;
+
+    @NonFinal
+    AsnBlacklistRegistry asnBlacklistRegistry;
+
+    @NonFinal
+    AsnBlacklistService asnBlacklistService;
 
     @Override
     @SneakyThrows
     public void onEnable() {
-        TranslationRegistrar.registerGlobal();
+        val dataDirectory = this.dataDirectory = getDataFolder().toPath();
+        val logger = this.logger = LoggerFactory.getLogger("AsnBlacklist");
 
-        val path = getDataFolder().toPath();
-        val fileConfig = FileConfigReader.read(path.resolve("config.yaml"));
-        val fileConfigValues = FileConfigValues.create(fileConfig);
+        val fileConfig = FileConfigReader.read(dataDirectory.resolve("config.yaml"));
+        FileConfigMigrations.migrate(logger, fileConfig, fileConfig);
+        val fileConfigValues = this.fileConfigValues = FileConfigValues.create(fileConfig);
 
-        val registry = FileConfigAsnBlacklistRegistry.create(fileConfigValues,
+        this.asnBlacklistRegistry = FileConfigAsnBlacklistRegistry.create(fileConfigValues,
                 InMemoryAsnBlacklistRegistry.create(ConcurrentHashMap.newKeySet()));
 
-        val logger = LoggerFactory.getLogger("AsnBlacklist");
+        reloadTranslations();
+        reloadDatabase();
 
+        val bungeeAudiences = BungeeAudiences.builder(this)
+                .build();
+
+        val pluginManager = getProxy().getPluginManager();
+        pluginManager.registerListener(this, new AsnBlacklistBungeeListener(this, logger,
+                asnBlacklistService));
+        pluginManager.registerCommand(this, new AsnBlacklistBungeeCommand(bungeeAudiences, this,
+                asnBlacklistRegistry));
+    }
+
+    private void reloadTranslations() {
+        TranslationRegistrar.registerGlobal(dataDirectory.resolve("translations"));
+    }
+
+    private void reloadDatabase() throws IOException {
         logger.info("Loading database...");
         val currentMillis = System.currentTimeMillis();
 
-        val asnBlacklistService = SimpleAsnBlacklistService.create(
+        asnBlacklistService = SimpleAsnBlacklistService.create(
                 AsnLookupExecutors.polled(),
                 CaffeineCachedAsnLookupService.create(
                         MaxmindAsnLookupService.create(
@@ -68,26 +110,27 @@ public final class AsnBlacklistBungee extends Plugin {
                                                 HttpClient.newBuilder()
                                                         .followRedirects(HttpClient.Redirect.NORMAL)
                                                         .build(),
-                                                fileConfigValues.getMaxmindKey()
+                                                fileConfigValues.getMaxmindDatabaseKey()
                                         ),
-                                        path.resolve(fileConfigValues.getMaxmindDatabaseFile())
+                                        dataDirectory.resolve(fileConfigValues.getMaxmindDatabaseFile()),
+                                        fileConfigValues.getMaxmindDatabaseTTL()
                                 )
-                        )
+                        ),
+                        fileConfigValues.getCacheTTL()
                 ),
-                registry
+                asnBlacklistRegistry
         );
 
         logger.info("Database loaded ({}ms).", System.currentTimeMillis() - currentMillis);
-
-        val bungeeAudiences = BungeeAudiences.builder(this)
-                .build();
-
-        val pluginManager = getProxy().getPluginManager();
-        pluginManager.registerListener(this, new AsnBlacklistBungeeListener(this, logger,
-                fileConfigValues,
-                asnBlacklistService));
-        pluginManager.registerCommand(this, new AsnBlacklistBungeeCommand(bungeeAudiences,
-                fileConfigValues,
-                registry));
     }
+
+    @SneakyThrows
+    public void reloadAll() {
+        fileConfigValues.reload();
+        asnBlacklistRegistry.reload();
+
+        reloadTranslations();
+        reloadDatabase();
+    }
+
 }
