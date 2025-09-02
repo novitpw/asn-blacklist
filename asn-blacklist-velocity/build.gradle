@@ -48,7 +48,7 @@ tasks {
     }
 
     processResources {
-        filesMatching(["plugin.yml"]) {
+        filesMatching(["velocity-plugin.json"]) {
             filter ReplaceTokens, tokens: [
                     "revision": "${project.version}".toString()
             ]
