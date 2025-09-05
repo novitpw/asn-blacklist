@@ -22,6 +22,7 @@ import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -79,6 +80,18 @@ public final class AsnBlacklistVelocity {
             EventManager eventManager,
             CommandManager commandManager
     ) throws Exception {
+        if (!hasMiniMessageTranslations()) {
+            logger.error("      / \\");
+            logger.error("     /   \\");
+            logger.error("    /  |  \\");
+            logger.error("   /   |   \\          PLUGIN REQUIRES VELOCITY 3.4.0-b516 OR NEWER");
+            logger.error("  /         \\      PLEASE UPDATE VELOCITY TO BUILD 3.4.0-b516 OR NEWER");
+            logger.error(" /     o     \\");
+            logger.error("/_____________\\");
+
+            throw new UnsupportedOperationException("PLUGIN REQUIRES VELOCITY 3.4.0-b516 OR NEWER");
+        }
+
         this.dataDirectory = dataDirectory;
         this.logger = logger;
 
@@ -99,6 +112,15 @@ public final class AsnBlacklistVelocity {
                         .aliases("asnbl")
                         .build(),
                 AsnBlacklistVelocityCommand.create(this, asnBlacklistRegistry));
+    }
+
+    private boolean hasMiniMessageTranslations() {
+        try {
+            Class.forName("net.kyori.adventure.text.minimessage.translation.MiniMessageTranslationStore");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     private void reloadTranslations() {
