@@ -19,6 +19,7 @@ package pw.novit.asnblacklist.config.mapper;
 
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import w.config.mapper.AbstractMapper;
 
 /**
@@ -38,7 +39,12 @@ public final class AsnMapper extends AbstractMapper<Long> {
     protected Long doMap(Object o) {
         if (o instanceof String value) {
             if (value.isEmpty() || value.isBlank()) return null;
-            if (!value.startsWith("AS")) throw new IllegalArgumentException("Value must start with AS");
+            if (!value.startsWith("AS")) {
+                val longValue = tryParseLong(value);
+                if (longValue != null) return longValue;
+
+                throw new IllegalArgumentException("Value must start with AS");
+            }
 
             val asnValue = value.substring(2);
             if (!asnValue.matches("\\d+")) throw new IllegalArgumentException("AS must contain an number value");
@@ -49,5 +55,13 @@ public final class AsnMapper extends AbstractMapper<Long> {
         }
 
         return null;
+    }
+
+    private static @Nullable Long tryParseLong(String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
