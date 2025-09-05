@@ -101,8 +101,9 @@ public final class AsnBlacklistVelocity {
                 AsnBlacklistVelocityCommand.create(this, asnBlacklistRegistry));
     }
 
-    private void reloadTranslations() {
-        TranslationRegistrar.registerGlobal(dataDirectory.resolve("translations"));
+    private void reloadTranslations() throws IOException {
+        TranslationRegistrar.registerGlobal(fileConfigValues.getDefaultLocale(),
+                dataDirectory.resolve("translations"));
     }
 
     private void reloadDatabase() throws IOException {

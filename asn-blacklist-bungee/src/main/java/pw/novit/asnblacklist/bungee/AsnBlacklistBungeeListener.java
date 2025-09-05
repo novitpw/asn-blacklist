@@ -67,7 +67,7 @@ public final class AsnBlacklistBungeeListener implements Listener {
                         event.setCancelled(true);
                         event.setReason(new TextComponent(BungeeComponentSerializer.get().serialize(
                                 GlobalTranslator.render(Component.translatable("asnblacklist.message.kick"),
-                                        TranslationRegistrar.DEFAULT_LOCALE))));
+                                        TranslationRegistrar.getDefaultLocale()))));
                     }
 
                     event.completeIntent(plugin);

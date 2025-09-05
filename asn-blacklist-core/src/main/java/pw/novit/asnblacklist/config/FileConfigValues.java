@@ -28,6 +28,7 @@ import pw.novit.asnblacklist.config.mapper.AsnMapper;
 import w.config.FileConfig;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,8 @@ public final class FileConfigValues {
     private static final String ASN_BLACKLIST = "asn-blacklist";
     private static final String CACHE_TTL = "cache-ttl";
 
+    private static final String DEFAULT_LOCALE = "default-locale";
+
     FileConfig fileConfig;
 
     @Getter
@@ -74,6 +77,10 @@ public final class FileConfigValues {
     @NonFinal
     Duration cacheTTL;
 
+    @Getter
+    @NonFinal
+    Locale defaultLocale;
+
     public void reload() {
         fileConfig.reload();
         reloadInternal();
@@ -88,6 +95,8 @@ public final class FileConfigValues {
                 .collect(Collectors.toUnmodifiableSet());
 
         cacheTTL = Duration.parse(fileConfig.getString(CACHE_TTL));
+
+        defaultLocale = Locale.forLanguageTag(fileConfig.getString(DEFAULT_LOCALE));
     }
 
     public void setAsnBlacklist(@NotNull Set<Long> asnBlacklist) {

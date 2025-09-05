@@ -21,6 +21,7 @@ import lombok.experimental.UtilityClass;
 import lombok.val;
 import org.slf4j.Logger;
 import pw.novit.asnblacklist.config.migrations.FileConfigMigration_v1_1;
+import pw.novit.asnblacklist.config.migrations.FileConfigMigration_v1_2;
 import w.config.FileConfig;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class FileConfigMigrations {
     private List<FileConfigMigration> migrations() {
         val migrations = new ArrayList<FileConfigMigration>();
         migrations.add(new FileConfigMigration_v1_1());
+        migrations.add(new FileConfigMigration_v1_2());
 
         return migrations;
     }

@@ -48,8 +48,6 @@ public final class UTF8ResourceBundleControl extends ResourceBundle.Control {
     @Override
     public ResourceBundle newBundle(final String baseName, final Locale locale, final String format, final ClassLoader loader, final boolean reload) throws IllegalAccessException, InstantiationException, IOException {
         if (format.equals("java.properties")) {
-            Files.createDirectories(path);
-
             final String bundle = this.toBundleName(baseName, locale);
             final String resource = this.toResourceName(bundle, "properties");
             final Path filePath = this.path.resolve(resource);
