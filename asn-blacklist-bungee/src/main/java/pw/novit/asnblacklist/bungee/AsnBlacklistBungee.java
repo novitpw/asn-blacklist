@@ -26,7 +26,6 @@ import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pw.novit.asnblacklist.AsnBlacklistService;
 import pw.novit.asnblacklist.SimpleAsnBlacklistService;
 import pw.novit.asnblacklist.config.FileConfigMigrations;
 import pw.novit.asnblacklist.config.FileConfigReader;
@@ -36,6 +35,7 @@ import pw.novit.asnblacklist.registry.FileConfigAsnBlacklistRegistry;
 import pw.novit.asnblacklist.registry.InMemoryAsnBlacklistRegistry;
 import pw.novit.asnblacklist.translation.TranslationRegistrar;
 import pw.novit.asnlookup.AsnLookupExecutors;
+import pw.novit.asnlookup.AsnLookupService;
 import pw.novit.asnlookup.cache.CaffeineCachedAsnLookupService;
 import pw.novit.asnlookup.database.FileCacheAsnDatabaseProvider;
 import pw.novit.asnlookup.database.maxmind.MaxmindAsnDatabaseProviders;
@@ -65,7 +65,7 @@ public final class AsnBlacklistBungee extends Plugin {
     AsnBlacklistRegistry asnBlacklistRegistry;
 
     @NonFinal
-    AsnBlacklistService asnBlacklistService;
+    AsnLookupService asnLookupService;
 
     @Override
     @SneakyThrows
@@ -83,6 +83,11 @@ public final class AsnBlacklistBungee extends Plugin {
         reloadTranslations();
         reloadDatabase();
 
+        val asnBlacklistService = SimpleAsnBlacklistService.create(
+                AsnLookupExecutors.polledDefault(),
+                asnLookupService,
+                asnBlacklistRegistry);
+
         val bungeeAudiences = BungeeAudiences.builder(this)
                 .build();
 
@@ -91,7 +96,8 @@ public final class AsnBlacklistBungee extends Plugin {
                 asnBlacklistService));
         pluginManager.registerCommand(this, new AsnBlacklistBungeeCommand(bungeeAudiences, this,
                 asnBlacklistRegistry,
-                new AsnBlacklistBungeeDisconnectObserver(logger, getProxy(), asnBlacklistService)
+                new AsnBlacklistBungeeDisconnectObserver(logger, getProxy(), asnBlacklistService),
+                asnLookupService
         ));
     }
 
@@ -103,9 +109,7 @@ public final class AsnBlacklistBungee extends Plugin {
         logger.info("Loading database...");
         val currentMillis = System.currentTimeMillis();
 
-        asnBlacklistService = SimpleAsnBlacklistService.create(
-                AsnLookupExecutors.polledDefault(),
-                CaffeineCachedAsnLookupService.create(
+        asnLookupService = CaffeineCachedAsnLookupService.create(
                         MaxmindAsnLookupService.create(
                                 FileCacheAsnDatabaseProvider.cache(
                                         MaxmindAsnDatabaseProviders.download(
@@ -119,8 +123,6 @@ public final class AsnBlacklistBungee extends Plugin {
                                 )
                         ),
                         fileConfigValues.getCacheTTL()
-                ),
-                asnBlacklistRegistry
         );
 
         logger.info("Database loaded ({}ms).", System.currentTimeMillis() - currentMillis);

@@ -19,6 +19,7 @@ package pw.novit.asnblacklist.velocity;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
@@ -31,7 +32,10 @@ import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.jetbrains.annotations.NotNull;
 import pw.novit.asnblacklist.AsnBlacklistDisconnectObserver;
 import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
+import pw.novit.asnlookup.AsnLookupService;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Comparator;
 
 import static net.kyori.adventure.text.Component.join;
@@ -47,7 +51,8 @@ final class AsnBlacklistVelocityCommand {
     public static @NotNull BrigadierCommand create(
             @NotNull AsnBlacklistVelocity asnBlacklistVelocity,
             @NotNull AsnBlacklistRegistry asnBlacklistRegistry,
-            @NotNull AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver
+            @NotNull AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver,
+            @NotNull AsnLookupService asnLookupService
     ) {
         return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("asnblacklist")
                 .requires(src -> src.hasPermission("asnblacklist.command"))
@@ -142,7 +147,31 @@ final class AsnBlacklistVelocityCommand {
                                                 text(count)));
                                     });
                             return Command.SINGLE_SUCCESS;
-                        }))
+                        })
+                        .build())
+                .then(LiteralArgumentBuilder.<CommandSource>literal("lookup")
+                        .then(RequiredArgumentBuilder.<CommandSource, String>argument("address",
+                                        StringArgumentType.word())
+                                .executes(ctx -> {
+                                    val addressArg = ctx.getArgument("address", String.class);
+
+                                    InetAddress address;
+
+                                    try {
+                                        address = InetAddress.getByName(addressArg);
+                                    } catch (UnknownHostException e) {
+                                        ctx.getSource().sendMessage(translatable("asnblacklist.command.lookup.error",
+                                                text(addressArg)));
+                                        return 0;
+                                    }
+
+                                    val asnResponse = asnLookupService.lookup(address);
+                                    ctx.getSource().sendMessage(translatable("asnblacklist.command.lookup",
+                                            text(addressArg),
+                                            Argument.tagResolver(Placeholder.parsed("asn", String.valueOf(
+                                                    asnResponse.autonomousSystemNumber())))));
+                                    return Command.SINGLE_SUCCESS;
+                                })))
         );
     }
 

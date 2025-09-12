@@ -30,7 +30,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.val;
 import org.slf4j.Logger;
-import pw.novit.asnblacklist.AsnBlacklistService;
 import pw.novit.asnblacklist.SimpleAsnBlacklistService;
 import pw.novit.asnblacklist.config.FileConfigMigrations;
 import pw.novit.asnblacklist.config.FileConfigReader;
@@ -40,6 +39,7 @@ import pw.novit.asnblacklist.registry.FileConfigAsnBlacklistRegistry;
 import pw.novit.asnblacklist.registry.InMemoryAsnBlacklistRegistry;
 import pw.novit.asnblacklist.translation.TranslationRegistrar;
 import pw.novit.asnlookup.AsnLookupExecutors;
+import pw.novit.asnlookup.AsnLookupService;
 import pw.novit.asnlookup.cache.CaffeineCachedAsnLookupService;
 import pw.novit.asnlookup.database.FileCacheAsnDatabaseProvider;
 import pw.novit.asnlookup.database.maxmind.MaxmindAsnDatabaseProviders;
@@ -70,7 +70,7 @@ public final class AsnBlacklistVelocity {
     AsnBlacklistRegistry asnBlacklistRegistry;
 
     @NonFinal
-    AsnBlacklistService asnBlacklistService;
+    AsnLookupService asnLookupService;
 
     @Inject
     public void configure(
@@ -106,6 +106,11 @@ public final class AsnBlacklistVelocity {
         reloadTranslations();
         reloadDatabase();
 
+        val asnBlacklistService = SimpleAsnBlacklistService.create(
+                AsnLookupExecutors.polledDefault(),
+                asnLookupService,
+                asnBlacklistRegistry);
+
         eventManager.register(pluginContainer, new AsnBlacklistVelocityListener(logger,
                 asnBlacklistService));
 
@@ -118,8 +123,8 @@ public final class AsnBlacklistVelocity {
                         new AsnBlacklistVelocityDisconnectObserver(
                                 logger,
                                 proxyServer,
-                                asnBlacklistService
-                        )));
+                                asnBlacklistService),
+                        asnLookupService));
     }
 
     private boolean hasMiniMessageTranslations() {
@@ -139,24 +144,20 @@ public final class AsnBlacklistVelocity {
         logger.info("Loading database...");
         val currentMillis = System.currentTimeMillis();
 
-        asnBlacklistService = SimpleAsnBlacklistService.create(
-                AsnLookupExecutors.polledDefault(),
-                CaffeineCachedAsnLookupService.create(
-                        MaxmindAsnLookupService.create(
-                                FileCacheAsnDatabaseProvider.cache(
-                                        MaxmindAsnDatabaseProviders.download(
-                                                HttpClient.newBuilder()
-                                                        .followRedirects(HttpClient.Redirect.NORMAL)
-                                                        .build(),
-                                                fileConfigValues.getMaxmindDatabaseKey()
-                                        ),
-                                        dataDirectory.resolve(fileConfigValues.getMaxmindDatabaseFile()),
-                                        fileConfigValues.getMaxmindDatabaseTTL()
-                                )
-                        ),
-                        fileConfigValues.getCacheTTL()
+        asnLookupService = CaffeineCachedAsnLookupService.create(
+                MaxmindAsnLookupService.create(
+                        FileCacheAsnDatabaseProvider.cache(
+                                MaxmindAsnDatabaseProviders.download(
+                                        HttpClient.newBuilder()
+                                                .followRedirects(HttpClient.Redirect.NORMAL)
+                                                .build(),
+                                        fileConfigValues.getMaxmindDatabaseKey()
+                                ),
+                                dataDirectory.resolve(fileConfigValues.getMaxmindDatabaseFile()),
+                                fileConfigValues.getMaxmindDatabaseTTL()
+                        )
                 ),
-                asnBlacklistRegistry
+                fileConfigValues.getCacheTTL()
         );
 
         logger.info("Database loaded ({}ms).", System.currentTimeMillis() - currentMillis);

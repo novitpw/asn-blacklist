@@ -33,7 +33,10 @@ import org.jetbrains.annotations.Nullable;
 import pw.novit.asnblacklist.AsnBlacklistDisconnectObserver;
 import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
 import pw.novit.asnblacklist.util.StringUtils;
+import pw.novit.asnlookup.AsnLookupService;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -51,12 +54,14 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
     AsnBlacklistBungee asnBlacklistBungee;
     AsnBlacklistRegistry asnBlacklistRegistry;
     AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver;
+    AsnLookupService asnLookupService;
 
     public AsnBlacklistBungeeCommand(
             @NotNull BungeeAudiences bungeeAudiences,
             @NotNull AsnBlacklistBungee asnBlacklistBungee,
             @NotNull AsnBlacklistRegistry asnBlacklistRegistry,
-            @NotNull AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver
+            @NotNull AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver,
+            @NotNull AsnLookupService asnLookupService
     ) {
         super("asnblacklist", "asnblacklist.command", "asnbl");
 
@@ -64,6 +69,7 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
         this.asnBlacklistBungee = asnBlacklistBungee;
         this.asnBlacklistRegistry = asnBlacklistRegistry;
         this.asnBlacklistDisconnectObserver = asnBlacklistDisconnectObserver;
+        this.asnLookupService = asnLookupService;
     }
 
     @Override
@@ -139,6 +145,22 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
 
                                 sendMessage(sender, translatable("asnblacklist.command.kickall", text(count)));
                         });
+                case "lookup" -> {
+                    InetAddress address;
+
+                    try {
+                        address = InetAddress.getByName(args[1]);
+                    } catch (UnknownHostException e) {
+                        sendMessage(sender, translatable("asnblacklist.command.lookup.error",
+                                text(args[1])));
+                        return;
+                    }
+
+                    val asnResponse = asnLookupService.lookup(address);
+                    sendMessage(sender, translatable("asnblacklist.command.lookup", text(args[1]),
+                            Argument.tagResolver(Placeholder.parsed("asn", String.valueOf(
+                                    asnResponse.autonomousSystemNumber())))));
+                }
                 default -> sendMessage(sender, translatable("asnblacklist.command.usage"));
             }
         }
@@ -150,7 +172,7 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
         if (length == 0) return Collections.emptySet();
 
         if (length == 1) {
-            return List.of("add", "remove", "list", "reload", "kickall");
+            return List.of("add", "remove", "list", "reload", "kickall", "lookup");
         } else if (length == 2 && args[0].equalsIgnoreCase("remove")) {
             val argument = args[1];
 
