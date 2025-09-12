@@ -34,9 +34,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 @UtilityClass
 public class AsnLookupExecutors {
 
-    public static @NotNull ExecutorService polled() {
+    private static final ExecutorService polled;
+
+    static {
         val systemThreads = Runtime.getRuntime().availableProcessors();
-        return polled(Math.max(1, systemThreads / 2), systemThreads);
+        polled = polled(Math.max(1, systemThreads / 2), systemThreads);
+    }
+
+    public static @NotNull ExecutorService polledDefault() {
+        return polled;
     }
 
     public static @NotNull ExecutorService polled(

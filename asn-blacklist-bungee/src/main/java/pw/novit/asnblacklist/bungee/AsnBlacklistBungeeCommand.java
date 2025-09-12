@@ -30,6 +30,7 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import pw.novit.asnblacklist.AsnBlacklistDisconnectObserver;
 import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
 import pw.novit.asnblacklist.util.StringUtils;
 
@@ -49,17 +50,20 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
     BungeeAudiences bungeeAudiences;
     AsnBlacklistBungee asnBlacklistBungee;
     AsnBlacklistRegistry asnBlacklistRegistry;
+    AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver;
 
     public AsnBlacklistBungeeCommand(
             @NotNull BungeeAudiences bungeeAudiences,
             @NotNull AsnBlacklistBungee asnBlacklistBungee,
-            @NotNull AsnBlacklistRegistry asnBlacklistRegistry
+            @NotNull AsnBlacklistRegistry asnBlacklistRegistry,
+            @NotNull AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver
     ) {
         super("asnblacklist", "asnblacklist.command", "asnbl");
 
         this.bungeeAudiences = bungeeAudiences;
         this.asnBlacklistBungee = asnBlacklistBungee;
         this.asnBlacklistRegistry = asnBlacklistRegistry;
+        this.asnBlacklistDisconnectObserver = asnBlacklistDisconnectObserver;
     }
 
     @Override
@@ -126,6 +130,15 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
 
                     sendMessage(sender, translatable("asnblacklist.command.reload"));
                 }
+                case "kickall" -> asnBlacklistDisconnectObserver.executeAsync()
+                        .whenComplete((count, cause) -> {
+                            if (cause != null) {
+                                sendMessage(sender, translatable("asnblacklist.command.error"));
+                                return;
+                            }
+
+                                sendMessage(sender, translatable("asnblacklist.command.kickall", text(count)));
+                        });
                 default -> sendMessage(sender, translatable("asnblacklist.command.usage"));
             }
         }
@@ -137,7 +150,7 @@ final class AsnBlacklistBungeeCommand extends Command implements TabExecutor {
         if (length == 0) return Collections.emptySet();
 
         if (length == 1) {
-            return List.of("add", "remove", "list", "reload");
+            return List.of("add", "remove", "list", "reload", "kickall");
         } else if (length == 2 && args[0].equalsIgnoreCase("remove")) {
             val argument = args[1];
 

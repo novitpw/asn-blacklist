@@ -78,7 +78,8 @@ public final class AsnBlacklistVelocity {
             Logger logger,
             PluginContainer pluginContainer,
             EventManager eventManager,
-            CommandManager commandManager
+            CommandManager commandManager,
+            ProxyServer proxyServer
     ) throws Exception {
         if (!hasMiniMessageTranslations()) {
             logger.error("      / \\");
@@ -111,7 +112,14 @@ public final class AsnBlacklistVelocity {
         commandManager.register(commandManager.metaBuilder("asnblacklist")
                         .aliases("asnbl")
                         .build(),
-                AsnBlacklistVelocityCommand.create(this, asnBlacklistRegistry));
+                AsnBlacklistVelocityCommand.create(
+                        this,
+                        asnBlacklistRegistry,
+                        new AsnBlacklistVelocityDisconnectObserver(
+                                logger,
+                                proxyServer,
+                                asnBlacklistService
+                        )));
     }
 
     private boolean hasMiniMessageTranslations() {
@@ -132,7 +140,7 @@ public final class AsnBlacklistVelocity {
         val currentMillis = System.currentTimeMillis();
 
         asnBlacklistService = SimpleAsnBlacklistService.create(
-                AsnLookupExecutors.polled(),
+                AsnLookupExecutors.polledDefault(),
                 CaffeineCachedAsnLookupService.create(
                         MaxmindAsnLookupService.create(
                                 FileCacheAsnDatabaseProvider.cache(

@@ -90,7 +90,9 @@ public final class AsnBlacklistBungee extends Plugin {
         pluginManager.registerListener(this, new AsnBlacklistBungeeListener(this, logger,
                 asnBlacklistService));
         pluginManager.registerCommand(this, new AsnBlacklistBungeeCommand(bungeeAudiences, this,
-                asnBlacklistRegistry));
+                asnBlacklistRegistry,
+                new AsnBlacklistBungeeDisconnectObserver(logger, getProxy(), asnBlacklistService)
+        ));
     }
 
     private void reloadTranslations() {
@@ -102,7 +104,7 @@ public final class AsnBlacklistBungee extends Plugin {
         val currentMillis = System.currentTimeMillis();
 
         asnBlacklistService = SimpleAsnBlacklistService.create(
-                AsnLookupExecutors.polled(),
+                AsnLookupExecutors.polledDefault(),
                 CaffeineCachedAsnLookupService.create(
                         MaxmindAsnLookupService.create(
                                 FileCacheAsnDatabaseProvider.cache(

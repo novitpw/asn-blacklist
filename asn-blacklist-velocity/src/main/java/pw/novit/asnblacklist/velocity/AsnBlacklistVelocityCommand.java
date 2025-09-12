@@ -29,6 +29,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.translation.Argument;
 import org.jetbrains.annotations.NotNull;
+import pw.novit.asnblacklist.AsnBlacklistDisconnectObserver;
 import pw.novit.asnblacklist.registry.AsnBlacklistRegistry;
 
 import java.util.Comparator;
@@ -45,7 +46,8 @@ final class AsnBlacklistVelocityCommand {
 
     public static @NotNull BrigadierCommand create(
             @NotNull AsnBlacklistVelocity asnBlacklistVelocity,
-            @NotNull AsnBlacklistRegistry asnBlacklistRegistry
+            @NotNull AsnBlacklistRegistry asnBlacklistRegistry,
+            @NotNull AsnBlacklistDisconnectObserver asnBlacklistDisconnectObserver
     ) {
         return new BrigadierCommand(LiteralArgumentBuilder.<CommandSource>literal("asnblacklist")
                 .requires(src -> src.hasPermission("asnblacklist.command"))
@@ -127,6 +129,20 @@ final class AsnBlacklistVelocityCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                         .build())
+                .then(LiteralArgumentBuilder.<CommandSource>literal("kickall")
+                        .executes(ctx -> {
+                            asnBlacklistDisconnectObserver.executeAsync()
+                                    .whenComplete((count, cause) -> {
+                                        if (cause != null) {
+                                            ctx.getSource().sendMessage(translatable("asnblacklist.command.error"));
+                                            return;
+                                        }
+
+                                        ctx.getSource().sendMessage(translatable("asnblacklist.command.kickall",
+                                                text(count)));
+                                    });
+                            return Command.SINGLE_SUCCESS;
+                        }))
         );
     }
 
