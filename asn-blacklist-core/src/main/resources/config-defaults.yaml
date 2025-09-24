@@ -3,6 +3,20 @@ asn-blacklist:
   - "AS328364"
   - "329325"
   - "60404"
+  # region ipvanish
+  - "5483"
+  - "9009"
+  - "20473"
+  - "29182"
+  - "42708"
+  - "44066"
+  - "48716"
+  - "57169"
+  - "63949"
+  - "199959"
+  - "207408"
+  - "29182"
+  # endregion
 maxmind-database:
   api-key: "P5g0fVdAQIq8yQau"
   file: "GeoLite2-ASN.mmdb"
